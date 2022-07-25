@@ -1,14 +1,16 @@
+# Create Unique Resource Group Name
 resource "random_pet" "rg-name" {
   prefix    = var.resource_group_name_prefix
 }
 
+# Create Resource Group
 resource "azurerm_resource_group" "rg" {
   name      = random_pet.rg-name.id
   location  = var.resource_group_location
 }
 
 # Create virtual network
-resource "azurerm_virtual_network" "myterraformnetwork" {
+resource "azurerm_virtual_network" "theseus-vnet" {
   name                = "myVnet"
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.rg.location
@@ -16,15 +18,15 @@ resource "azurerm_virtual_network" "myterraformnetwork" {
 }
 
 # Create subnet
-resource "azurerm_subnet" "myterraformsubnet" {
+resource "azurerm_subnet" "theseus-subnet" {
   name                 = "mySubnet"
   resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.myterraformnetwork.name
+  virtual_network_name = azurerm_virtual_network.theseus-vnet.name
   address_prefixes     = ["10.0.1.0/24"]
 }
 
 # Create public IPs
-resource "azurerm_public_ip" "myterraformpublicip" {
+resource "azurerm_public_ip" "theseus-pip" {
   name                = "myPublicIP"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
@@ -32,7 +34,7 @@ resource "azurerm_public_ip" "myterraformpublicip" {
 }
 
 # Create Network Security Group and rule
-resource "azurerm_network_security_group" "myterraformnsg" {
+resource "azurerm_network_security_group" "theseus-nsg" {
   name                = "myNetworkSecurityGroup"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
@@ -50,23 +52,23 @@ resource "azurerm_network_security_group" "myterraformnsg" {
 }
 
 # Create network interface
-resource "azurerm_network_interface" "myterraformnic" {
+resource "azurerm_network_interface" "theseus-nic" {
   name                = "myNIC"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
   ip_configuration {
     name                          = "myNicConfiguration"
-    subnet_id                     = azurerm_subnet.myterraformsubnet.id
+    subnet_id                     = azurerm_subnet.theseus-subnet.id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.myterraformpublicip.id
+    public_ip_address_id          = azurerm_public_ip.theseus-pip.id
   }
 }
 
 # Connect the security group to the network interface
 resource "azurerm_network_interface_security_group_association" "example" {
-  network_interface_id      = azurerm_network_interface.myterraformnic.id
-  network_security_group_id = azurerm_network_security_group.myterraformnsg.id
+  network_interface_id      = azurerm_network_interface.theseus-nic.id
+  network_security_group_id = azurerm_network_security_group.theseus-nsg.id
 }
 
 # Generate random text for a unique storage account name
@@ -79,7 +81,7 @@ resource "random_id" "randomId" {
 }
 
 # Create storage account for boot diagnostics
-resource "azurerm_storage_account" "mystorageaccount" {
+resource "azurerm_storage_account" "theseus-storage" {
   name                     = "diag${random_id.randomId.hex}"
   location                 = azurerm_resource_group.rg.location
   resource_group_name      = azurerm_resource_group.rg.name
@@ -94,14 +96,14 @@ resource "azurerm_storage_account" "mystorageaccount" {
 # }
 
 # Create virtual machine
-resource "azurerm_linux_virtual_machine" "myterraformvm" {
+resource "azurerm_linux_virtual_machine" "theseus-vm" {
   name                  = "myVM"
   location              = azurerm_resource_group.rg.location
   resource_group_name   = azurerm_resource_group.rg.name
-  network_interface_ids = [azurerm_network_interface.myterraformnic.id]
+  network_interface_ids = [azurerm_network_interface.theseus-nic.id]
   size                  = "Standard_DS1_v2"
   os_disk {
-    name                 = "myOsDisk"
+    name                 = "theseus-os"
     caching              = "ReadWrite"
     storage_account_type = "Premium_LRS"
   }
@@ -111,7 +113,7 @@ resource "azurerm_linux_virtual_machine" "myterraformvm" {
     sku       = "20_04-lts-gen2"
     version   = "latest"
   }
-  computer_name                   = "myvm"
+  computer_name                   = "theseus-vm"
   admin_username                  = "azureuser"
   disable_password_authentication = true
   admin_ssh_key {
@@ -120,6 +122,6 @@ resource "azurerm_linux_virtual_machine" "myterraformvm" {
     public_key = file(var.public_key_path)
   }
   boot_diagnostics {
-    storage_account_uri = azurerm_storage_account.mystorageaccount.primary_blob_endpoint
+    storage_account_uri = azurerm_storage_account.theseus-storage.primary_blob_endpoint
   }
 }
