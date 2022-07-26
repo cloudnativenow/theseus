@@ -3,7 +3,7 @@
 
 - name: Install Crowdstrike Falcon
   hosts: all
-  remote_user: ec2-user
+  remote_user: azureuser
   become: yes
 
   roles:
