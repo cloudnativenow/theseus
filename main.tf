@@ -107,9 +107,9 @@ resource "azurerm_linux_virtual_machine" "theseus-vm" {
     storage_account_type = "Premium_LRS"
   }
   source_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-focal"
-    sku       = "20_04-lts-gen2"
+    publisher = "OpenLogic"
+    offer     = "CentOS"
+    sku       = "8_5-gen2"
     version   = "latest"
   }
   computer_name                   = "theseus-vm"

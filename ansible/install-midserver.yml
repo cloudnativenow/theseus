@@ -1,0 +1,9 @@
+---
+# This playbook installs the agent stack for this site.
+
+- name: Install ServiceNow MID
+  hosts: control
+  remote_user: azureuser
+
+  roles:
+    - midserver

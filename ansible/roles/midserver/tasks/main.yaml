@@ -1,0 +1,65 @@
+
+---
+# This playbook installs the ServiceNow MID Server
+
+- name: Create MID User Account
+  become: yes
+  shell: |
+    # Create MID User
+    useradd -c "midserver" midserver -U -m -s /bin/bash
+    # Add MID User to wheel
+    usermod -aG wheel midserver
+
+  tags:
+    - midserver
+
+- name: Download MID software
+  become: yes 
+  command: wget --progress=bar:force --no-check-certificate {{mid_url}} -O /root/mid.rpm
+  tags:
+    - midserver
+
+- name: Install MID software
+  become: yes
+  shell: |
+    RPM=/root/mid.rpm
+    PACKAGE=$(rpm -qp $RPM)
+    if [ $(rpm -q $PACKAGE) ]; then
+      echo "Package $PACKAGE is installed."
+    else
+      echo "Package $PACKAGE not found."
+      rpm -ivh --nodeps $RPM
+    fi
+  
+  tags:
+    - midserver
+
+- name: Set MID Account Permissions
+  become: yes
+  shell: |
+    # Set Permissions
+    chown -R midserver:midserver /opt/servicenow
+    chmod -R 775 /opt/servicenow/mid/agent/*.sh
+
+  tags:
+    - midserver
+
+- name: Configure MID Server
+  become: yes
+  shell: |
+    /opt/servicenow/mid/agent/installer.sh -silent \
+    -INSTANCE_URL {{instance_url}} \
+    -MUTUAL_AUTH N \
+    -MID_USERNAME {{mid_username}} \
+    -MID_PASSWORD {{mid_password}} \
+    -USE_PROXY N \
+    -MID_NAME $(hostname) \
+    -APP_NAME mid \
+    -APP_LONG_NAME $(hostname) \
+    -NON_ROOT_USER midserver
+
+    # Enable & Run Service
+    service mid restart
+
+  tags:
+    - midserver

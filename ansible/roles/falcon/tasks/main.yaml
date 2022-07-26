@@ -1,0 +1,28 @@
+---
+# This playbook installs ACC software
+
+- name: Upload Falcon Agent
+  become: yes
+  copy:
+    src: "{{falcon_rpm}}"
+    dest: /root/falcon-sensor.rpm
+
+- name: Install Falcon Agent
+  become: yes
+  shell: |
+    RPM=/root/falcon-sensor.rpm
+    PACKAGE=$(rpm -qp $RPM)
+    if [ $(rpm -q $PACKAGE) ]; then
+      echo "Package $PACKAGE is installed."
+    else
+      echo "Package $PACKAGE not found."
+      rpm -ivh --nodeps $RPM
+    fi  
+
+- name: Configure Falcon Agent
+  become: yes
+  command: /opt/CrowdStrike/falconctl -s -f --cid="{{falcon_cid}}"
+
+- name: Start Falcon Service
+  become: yes
+  command: systemctl restart falcon-sensor
