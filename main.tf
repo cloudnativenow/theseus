@@ -1,17 +1,17 @@
 # Create Unique Resource Group Name
 resource "random_pet" "rg-name" {
-  prefix    = var.resource_group_name_prefix
+  length = 1
 }
 
 # Create Resource Group
 resource "azurerm_resource_group" "rg" {
-  name      = random_pet.rg-name.id
+  name = "theseus-${random_pet.rg-name.id}-rg"
   location  = var.resource_group_location
 }
 
 # Create virtual network
 resource "azurerm_virtual_network" "theseus-vnet" {
-  name                = "myVnet"
+  name                = "theseus-vnet"
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
@@ -19,7 +19,7 @@ resource "azurerm_virtual_network" "theseus-vnet" {
 
 # Create subnet
 resource "azurerm_subnet" "theseus-subnet" {
-  name                 = "mySubnet"
+  name                 = "theseus-subnet"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.theseus-vnet.name
   address_prefixes     = ["10.0.1.0/24"]
@@ -27,7 +27,7 @@ resource "azurerm_subnet" "theseus-subnet" {
 
 # Create public IPs
 resource "azurerm_public_ip" "theseus-pip" {
-  name                = "myPublicIP"
+  name                = "theseus-pip"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   allocation_method   = "Dynamic"
@@ -35,7 +35,7 @@ resource "azurerm_public_ip" "theseus-pip" {
 
 # Create Network Security Group and rule
 resource "azurerm_network_security_group" "theseus-nsg" {
-  name                = "myNetworkSecurityGroup"
+  name                = "theseus-nsg"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   security_rule {
@@ -53,12 +53,11 @@ resource "azurerm_network_security_group" "theseus-nsg" {
 
 # Create network interface
 resource "azurerm_network_interface" "theseus-nic" {
-  name                = "myNIC"
+  name                = "theseus-nic"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-
   ip_configuration {
-    name                          = "myNicConfiguration"
+    name                          = "theseus-nic-config"
     subnet_id                     = azurerm_subnet.theseus-subnet.id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.theseus-pip.id
@@ -97,7 +96,7 @@ resource "azurerm_storage_account" "theseus-storage" {
 
 # Create virtual machine
 resource "azurerm_linux_virtual_machine" "theseus-vm" {
-  name                  = "myVM"
+  name                  = "theseus-vm"
   location              = azurerm_resource_group.rg.location
   resource_group_name   = azurerm_resource_group.rg.name
   network_interface_ids = [azurerm_network_interface.theseus-nic.id]
