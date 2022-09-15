@@ -5,6 +5,9 @@
 *.tfstate
 *.tfstate.*
 
+# .hcl files
+*.hcl
+
 # Crash log files
 crash.log
 crash.*.log
